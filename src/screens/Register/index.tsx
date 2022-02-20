@@ -44,6 +44,7 @@ const schema = Yup.object().shape({
     .number()
     .typeError("Informe um valor númerico")
     .positive("O valor não pode ser negativo")
+    .required("O valor é obrigatório"),
 })
 
 
@@ -67,7 +68,7 @@ export function Register() {
     resolver: yupResolver(schema)
   });
 
-  function handleTransacationTypesSelect(type: "up" | "down") {
+  function handleTransacationTypesSelect(type: "positive" | "negative") {
     setTransactionType(type)
   }
 
@@ -93,8 +94,8 @@ export function Register() {
       id: String(uuid.v4()),
       name: form.name,
       amount: form.amount,
-      transactionType,
-      category: category.key,
+      type: transactionType,
+      category: category,
       date: new Date()
     }
 
@@ -156,16 +157,16 @@ export function Register() {
           
           <TransacationTypes>
             <TransacationTypeButton
-              isActive={transactionType === 'up'}
               type="up"
               title='Income'
-              onPress={() => handleTransacationTypesSelect('up')}
+              isActive={transactionType === 'positive'}
+              onPress={() => handleTransacationTypesSelect('positive')}
             />
             <TransacationTypeButton 
-              isActive={transactionType === 'down'}
               type="down"
               title='Outcome'
-              onPress={() => handleTransacationTypesSelect('down')}
+              isActive={transactionType === 'negative'}
+              onPress={() => handleTransacationTypesSelect('negative')}
             />
           </TransacationTypes>
           <CategorySelectButton 

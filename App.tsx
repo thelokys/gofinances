@@ -2,6 +2,7 @@ import 'intl'
 import 'intl/locale-data/jsonp/pt-BR'
 
 import React from 'react';
+import {StatusBar} from 'react-native';
 import AppLoading from 'expo-app-loading';
 import {
   useFonts,
@@ -32,6 +33,11 @@ export default function App() {
     <ThemeProvider theme={theme}>
        <GestureHandlerRootView style={{flex : 1}}>
         <NavigationContainer>
+          <StatusBar 
+            barStyle='light-content'
+            backgroundColor="transparent"
+            translucent
+          />
           <AppRoutes/>
         </NavigationContainer>
       </GestureHandlerRootView>
