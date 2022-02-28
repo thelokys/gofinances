@@ -26,6 +26,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 
 import { useTheme } from "styled-components";
 import { RFValue } from "react-native-responsive-fontsize";
+import { useAuth } from "../../hooks/auth";
 
 
 interface CategoryData {
@@ -41,7 +42,8 @@ export function Resume() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [isLoading, setIsLoading] = useState(false)
   const [totalByCategories, setTotalByCategories] = useState<CategoryData[]>([])
-  const theme = useTheme(); 
+  const { user } = useAuth()
+  const theme = useTheme();
 
   function handleDateChange(action: 'next'| 'prev') {
     if(action === 'next') {
@@ -54,7 +56,7 @@ export function Resume() {
 
   async function loadData() {
     setIsLoading(true)
-    const dataKey = "@gofinances:transactions"
+    const dataKey = `@gofinances:transactions_user:${user.id}`
     const response = await AsyncStorage.getItem(dataKey)
     const responseFormatted = response ? JSON.parse(response) : []
     

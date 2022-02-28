@@ -23,7 +23,7 @@ import {
 } from './styles'
 
 import { useTheme } from 'styled-components'
-
+import { useAuth } from '../../hooks/auth'
 import { useFocusEffect } from '@react-navigation/native'
 import { asBRLCurrency } from '../../utils/money'
 import { asBrazilianDate } from '../../utils/date'
@@ -47,15 +47,25 @@ export function Dashboard() {
   const [transactions, setTransactions] = useState<DataListProps[]>([])
   const [highlightData, setHighlightCard] = useState<HighlightDataProps>()
   const theme = useTheme();
+  const { signOut, user } = useAuth()
+
 
   function getLastTransactionDate(
     collection: DataListProps[],
     type: 'positive' | 'negative'
   ) {
+
+    const collectionFiltered = collection
+      .filter(transaction => transaction.type === type)
+
+
+    if(collectionFiltered.length === 0) {
+      return 0
+    }
+
     const lastTransactionDate = new Date(Math.max.apply(
         Math, 
-        collection
-        .filter(transaction => transaction.type === type)
+        collectionFiltered
         .map(transaction => new Date(transaction.date).getTime()))
     )
     
@@ -63,7 +73,7 @@ export function Dashboard() {
   }
 
   async function loadTransaction() {
-    const dataKey = "@gofinances:transactions"
+    const dataKey = `@gofinances:transactions_user:${user.id}`
     const response = await AsyncStorage.getItem(dataKey)
     const transactions: DataListProps[] = response ? JSON.parse(response): []
 
@@ -97,7 +107,9 @@ export function Dashboard() {
 
       const lastEntryDate = getLastTransactionDate(transactions, 'positive')
       const lastExpensiveDate = getLastTransactionDate(transactions, 'negative')
-      const totalInterval = `01 a ${lastExpensiveDate}`
+      const totalInterval = lastEntryDate === 0 
+        ?  'Não há transações'
+        :`01 a ${lastExpensiveDate}`
 
       getLastTransactionDate(transactions, 'positive')
       const total = entriesTotal - expensiveTotal
@@ -105,11 +117,15 @@ export function Dashboard() {
       setHighlightCard({
         entries: {
           amount: asBRLCurrency(entriesTotal),
-          lastTransaction: `Última transação dia ${lastEntryDate}`
+          lastTransaction: lastEntryDate === 0 
+            ? '' 
+            : `Última transação dia ${lastEntryDate}`
         },
         expensives: {
           amount: asBRLCurrency(expensiveTotal),
-          lastTransaction: `Última saída dia ${lastExpensiveDate}`
+          lastTransaction: lastExpensiveDate === 0 
+            ? '' 
+            : `Última saída dia ${lastExpensiveDate}`
         },
         total: {
           amount: asBRLCurrency(total),
@@ -139,14 +155,14 @@ export function Dashboard() {
         <Header>
           <UserWrapper>
             <UserInfo>
-              <Photo source={{ uri: "https://avatars.githubusercontent.com/u/8315739?v=4"}}/>
+              <Photo source={{ uri: user.photo}}/>
               <User>
                 <UserGreeting>Olá, </UserGreeting>
-                <UserName>José Ricardo</UserName>
+                <UserName>{user.name}</UserName>
               </User>
             </UserInfo>
 
-            <LogoutButton onPress={() => {}}>
+            <LogoutButton onPress={signOut}>
               <Icon name="power" />
             </LogoutButton>
           </UserWrapper>
@@ -158,7 +174,6 @@ export function Dashboard() {
             title="Entrada"
             amount={highlightData?.entries.amount}
             lastTransaction={highlightData?.entries.lastTransaction}
-            // lastTransaction='Última transação dia 13 de abril'
           />
           
           <HighlightCard 
@@ -166,7 +181,6 @@ export function Dashboard() {
             title="Saídas"
             amount={highlightData?.expensives.amount}
             lastTransaction={highlightData?.expensives.lastTransaction}
-            // lastTransaction='Última saída dia 03 de abril'
           />
 
           <HighlightCard 
@@ -174,7 +188,6 @@ export function Dashboard() {
             title="Total"
             amount={highlightData?.total.amount}
             lastTransaction={highlightData?.total.lastTransaction}
-            // lastTransaction='01 à 16 de abril'
           />
         </HighlightCards>
 
